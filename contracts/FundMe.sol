@@ -11,9 +11,7 @@ contract FundMe {
     
 
     address public immutable i_owner;
-    constructor(){
-        i_owner = msg.sender;
-    }
+   
     using PriceConverter for uint256;
 
     //We want to be able to fund this contract and also to be able to withdraw from this contract
@@ -24,11 +22,17 @@ contract FundMe {
 
     address[] public funders;
     mapping (address => uint256) public addressToAmountFunded;
+    event funded(address indexed from, uint256 amount);
+    AggregatorV3Interface public priceFeed;
 
+    constructor(address priceFeedAddress){
+        i_owner = msg.sender;
+        priceFeed = AggregatorV3Interface(priceFeedAddress);
+    }
 
     function fund() public payable  {
         AmountValue = msg.value;
-        require(msg.value.getConversionRate() >= MINIMUM_USD, "Didn't get enough funds");
+        require(msg.value.getConversionRate(priceFeed) >= MINIMUM_USD, "Didn't get enough funds");
         funders.push(msg.sender);
         addressToAmountFunded[msg.sender] = msg.value;
     }
